@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIcon, MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../auth/auth-service';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-nav-bar',
@@ -16,6 +17,19 @@ import { AuthService } from '../auth/auth-service';
   templateUrl: './nav-bar.html',
   styleUrls: ['./nav-bar.scss']
 })
-export class NavBar {
-  constructor(public authService: AuthService) {}
+export class NavBar implements OnInit, OnDestroy {
+  private destroy = new Subject();
+  isLoggedin! : boolean;
+  constructor(public authService: AuthService) {
+  authService.authStatus.pipe(takeUntil(this.destroy)).subscribe(result => {
+      this.isLoggedin = result;
+  });
+}
+  ngOnInit() {
+    this.isLoggedin = this.authService.isLoggedIn();
+  }
+  ngOnDestroy() {
+    this.destroy.next(true);
+    this.destroy.complete();
+  }
 }
